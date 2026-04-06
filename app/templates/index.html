@@ -354,7 +354,7 @@
         DERNIÈRES 2H
       </div>
       <span class="slide-counter" id="slide-counter">
-        {% if recent_news %}1 / {{ recent_news|length }}{% endif %}
+        {% if recent_news %}1 / {{ recent_news|length }}{% else %}1 / 6{% endif %}
       </span>
     </div>
 
@@ -415,21 +415,42 @@
         {% endfor %}
 
       {% else %}
-        <!-- Placeholder quand pas encore d'articles ingérés -->
-        <div class="slide active">
+        <!-- Demo articles quand pas encore d'articles ingérés -->
+        {% set demos = [
+          ("TECH", "TechCrunch", "14:32", "OpenAI dévoile o3 : raisonnement autonome, code de niveau expert, disponible dès maintenant", "Performances record sur tous les benchmarks — mathématiques, programmation et logique complexe dépassent les meilleurs modèles actuels.", "GLOBAL"),
+          ("FINANCE", "Les Échos", "14:18", "La BCE maintient ses taux : l'inflation européenne recule à 2,1%", "Christine Lagarde confirme une pause dans la politique restrictive. Les marchés rebondissent, le CAC 40 franchit les 8 200 points.", "FR"),
+          ("CRYPTO", "CoinDesk", "14:05", "Bitcoin dépasse les 75 000$ — les ETF institutionnels accélèrent", "Les entrées hebdomadaires dans les ETF Bitcoin atteignent un record de 1,4 milliard de dollars. Ethereum suit avec +8% sur 24h.", "GLOBAL"),
+          ("SPORT", "L'Équipe", "13:54", "Ligue des Champions : le PSG s'impose 2-0 à Munich — demie-finale historique", "Dembélé et Mbappé ont été décisifs. Le PSG rejoint les demi-finales pour la première fois depuis 2021.", "FR"),
+          ("IA", "MIT Tech Review", "13:40", "Google DeepMind annonce AlphaCode 3 : il résout des problèmes de compétition inédits", "Le modèle atteint le top 1% des compétiteurs humains sur Codeforces, marquant une nouvelle étape dans la programmation par IA.", "GLOBAL"),
+          ("POLITIQUE", "Le Monde", "13:28", "Réforme des retraites : le gouvernement annonce un assouplissement des conditions", "Un accord trouvé en commission mixte paritaire prévoit un relèvement progressif à 64 ans avec des exceptions pour les carrières longues.", "FR"),
+        ] %}
+        {% for cat, source, time, title, summary, region in demos %}
+        <div class="slide {% if loop.first %}active{% endif %}">
           <div>
-            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
-              <span class="slide-category nn-badge" style="background:rgba(229,57,53,.12);color:var(--nn-red-l);">TECH</span>
-              <span class="slide-source">TechCrunch · à l'instant</span>
+            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem;">
+              <span class="slide-category nn-badge" style="background:rgba(229,57,53,.12);color:var(--nn-red-l);">{{ cat }}</span>
+              <span class="slide-source">{{ source }} · {{ time }}</span>
+              <span style="font-size:.68rem;background:rgba(255,193,7,.1);color:#FFD54F;border:1px solid rgba(255,193,7,.2);padding:1px 7px;border-radius:10px;font-weight:600;">DÉMO</span>
             </div>
-            <div class="slide-title">Les premières actualités arrivent très bientôt…</div>
-            <div class="slide-summary">🧠 L'ingestion des flux RSS démarre automatiquement. Revenez dans quelques minutes pour voir les premières infos en direct.</div>
+            <div class="slide-title">{{ title }}</div>
+            <div class="slide-summary">🧠 {{ summary }}</div>
           </div>
           <div class="slide-footer">
-            <span>🌍 GLOBAL</span>
-            <a href="{{ url_for('register') }}" style="font-size:.75rem;color:var(--nn-red-l);text-decoration:none;font-weight:600;">S'inscrire →</a>
+            <span>🌍 {{ region }}</span>
+            <a href="{{ url_for('register') }}"
+               style="font-size:.75rem;color:var(--nn-red-l);text-decoration:none;font-weight:600;">
+              Inscrivez-vous pour voir en direct →
+            </a>
           </div>
         </div>
+        {% endfor %}
+
+        <!-- Update slide counter + dots for demo -->
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          document.getElementById('slide-counter').textContent = '1 / 6';
+        });
+        </script>
       {% endif %}
     </div>
 
@@ -442,6 +463,12 @@
     {% if recent_news and recent_news|length > 1 %}
     <div class="slide-dots" id="slide-dots">
       {% for article in recent_news %}
+      <button class="dot {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}"></button>
+      {% endfor %}
+    </div>
+    {% elif not recent_news %}
+    <div class="slide-dots" id="slide-dots">
+      {% for i in range(6) %}
       <button class="dot {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}"></button>
       {% endfor %}
     </div>
