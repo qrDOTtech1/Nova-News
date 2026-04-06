@@ -20,7 +20,10 @@ from app.models import db, NewsItem, User, UserPreferences
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///novanews.db")
+_db_url = os.environ.get("DATABASE_URL", "sqlite:///novanews.db")
+if _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "nova-dev-secret-change-in-prod")
 
@@ -31,9 +34,7 @@ INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "nova-internal-key-change-
 
 # ─── DB Init ──────────────────────────────────────────────────────────────────
 
-@app.before_request
-def create_tables():
-    app.before_request_funcs[None].remove(create_tables)
+with app.app_context():
     db.create_all()
 
 
