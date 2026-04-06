@@ -30,7 +30,6 @@ app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "nova-dev-secret-c
 db.init_app(app)
 
 INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "nova-internal-key-change-in-prod")
-NOVA_NEWS_MASTER_KEY = os.environ.get("NOVA_NEWS_MASTER_KEY", "")
 
 
 # ─── DB Init ──────────────────────────────────────────────────────────────────
@@ -356,7 +355,7 @@ def settings():
 def admin_provision_user():
     """Crée ou remet à zéro le mot de passe d'un compte NovaNews (appelé depuis NovaAdmin)."""
     key = request.headers.get("X-Master-Key", "")
-    if not NOVA_NEWS_MASTER_KEY or key != NOVA_NEWS_MASTER_KEY:
+    if not INTERNAL_API_KEY or key != INTERNAL_API_KEY:
         return jsonify({"error": "Unauthorized"}), 401
 
     data = request.get_json(silent=True) or {}
