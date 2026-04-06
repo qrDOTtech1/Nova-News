@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}Préférences — NovaNews{% endblock %}
+
+{% block head %}
+<style>
+  .settings-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+  }
+  .settings-header {
+    margin-bottom: 2.5rem;
+  }
+  .settings-header h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+    margin-bottom: 0.4rem;
+  }
+  .settings-header p { color: var(--nn-muted); font-size: 0.92rem; margin: 0; }
+
+  .settings-section {
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 16px;
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .settings-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--nn-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Topic bubbles */
+  .topic-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+  .topic-bubble { position: relative; }
+  .topic-bubble input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .topic-bubble label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--nn-bg);
+    border: 1.5px solid var(--nn-border);
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .topic-bubble label:hover { border-color: #30363d; transform: translateY(-1px); }
+  .topic-bubble input:checked + label {
+    border-color: var(--nn-red);
+    background: rgba(229,57,53,0.1);
+    color: #fff;
+  }
+
+  /* Region */
+  .region-grid { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+  .region-bubble { position: relative; }
+  .region-bubble input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .region-bubble label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--nn-bg);
+    border: 1.5px solid var(--nn-border);
+    border-radius: 12px;
+    padding: 0.75rem 1.4rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: all 0.15s;
+    user-select: none;
+    min-width: 130px;
+    justify-content: center;
+  }
+  .region-bubble label:hover { border-color: #30363d; transform: translateY(-2px); }
+  .region-bubble input:checked + label {
+    border-color: var(--nn-red);
+    background: rgba(229,57,53,0.1);
+    color: #fff;
+  }
+
+  .btn-save {
+    background: var(--nn-red);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.9rem 2.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-save:hover {
+    background: var(--nn-red-l);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(229,57,53,0.3);
+  }
+
+  .account-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--nn-red), #b71c1c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .account-details { flex: 1; }
+  .account-details .uname { font-weight: 700; font-size: 1rem; }
+  .account-details .uemail { color: var(--nn-muted); font-size: 0.85rem; margin-top: 0.2rem; }
+  .account-details .ujoin { color: var(--nn-muted); font-size: 0.78rem; margin-top: 0.1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set current_topics = prefs.topics if prefs and prefs.topics else [] %}
+{% set current_regions = prefs.regions if prefs and prefs.regions else ['GLOBAL'] %}
+
+{% set topics_meta = [
+  ('IA',        '🤖', '#A5D6A7'),
+  ('TECH',      '💻', '#90CAF9'),
+  ('FINANCE',   '💹', '#FFD54F'),
+  ('SPORT',     '⚽', '#81C784'),
+  ('AUTO',      '🚗', '#CE93D8'),
+  ('CRYPTO',    '₿',  '#FFB74D'),
+  ('SCIENCE',   '🔬', '#4DB6AC'),
+  ('GAMING',    '🎮', '#F48FB1'),
+  ('SANTE',     '🏥', '#80CBC4'),
+  ('POLITIQUE', '🏛️', '#EF9A9A'),
+  ('CULTURE',   '🎭', '#FFCC02'),
+  ('GENERAL',   '🌐', '#B0BEC5'),
+] %}
+
+<div class="settings-wrap">
+  <div class="settings-header">
+    <a href="{{ url_for('feed') }}" style="color:var(--nn-muted);text-decoration:none;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.3rem;margin-bottom:1rem;">
+      <i class="bi bi-arrow-left"></i> Retour au flux
+    </a>
+    <h1><i class="bi bi-sliders" style="color:var(--nn-red);"></i> Mes préférences</h1>
+    <p>Modifiez vos sujets d'intérêt et vos régions pour personnaliser votre flux.</p>
+  </div>
+
+  <!-- ACCOUNT -->
+  <div class="settings-section">
+    <div class="settings-section-title"><i class="bi bi-person-circle"></i> Compte</div>
+    <div class="account-info">
+      <div class="avatar">{{ user.username[0].upper() }}</div>
+      <div class="account-details">
+        <div class="uname">{{ user.username }}</div>
+        <div class="uemail">{{ user.email }}</div>
+        <div class="ujoin">Membre depuis {{ user.created_at.strftime('%B %Y') }}</div>
+      </div>
+      {% if prefs and prefs.bookmarks %}
+      <div style="text-align:center;padding:0.5rem 1rem;background:rgba(229,57,53,0.08);border:1px solid rgba(229,57,53,0.2);border-radius:10px;">
+        <div style="font-size:1.3rem;font-weight:800;color:var(--nn-red);">{{ prefs.bookmarks|length }}</div>
+        <div style="font-size:0.75rem;color:var(--nn-muted);">Bookmarks</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <form method="post" action="{{ url_for('settings') }}">
+
+    <!-- TOPICS -->
+    <div class="settings-section">
+      <div class="settings-section-title"><i class="bi bi-tag-fill"></i> Sujets suivis</div>
+      <div class="topic-grid">
+        {% for slug, icon, color in topics_meta %}
+        <div class="topic-bubble">
+          <input type="checkbox" name="topics" value="{{ slug }}" id="t_{{ slug }}"
+            {{ 'checked' if slug in current_topics else '' }} />
+          <label for="t_{{ slug }}">
+            <span>{{ icon }}</span> {{ slug }}
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- REGIONS -->
+    <div class="settings-section">
+      <div class="settings-section-title"><i class="bi bi-globe2"></i> Régions</div>
+      <div class="region-grid">
+        <div class="region-bubble">
+          <input type="checkbox" name="regions" value="FR" id="r_FR"
+            {{ 'checked' if 'FR' in current_regions else '' }} />
+          <label for="r_FR">🇫🇷 France</label>
+        </div>
+        <div class="region-bubble">
+          <input type="checkbox" name="regions" value="PT" id="r_PT"
+            {{ 'checked' if 'PT' in current_regions else '' }} />
+          <label for="r_PT">🇵🇹 Portugal</label>
+        </div>
+        <div class="region-bubble">
+          <input type="checkbox" name="regions" value="GLOBAL" id="r_GLOBAL"
+            {{ 'checked' if 'GLOBAL' in current_regions else '' }} />
+          <label for="r_GLOBAL">🌍 International</label>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+      <button type="submit" class="btn-save">
+        <i class="bi bi-check-circle-fill"></i> Sauvegarder
+      </button>
+      <a href="{{ url_for('feed') }}" style="color:var(--nn-muted);text-decoration:none;font-size:0.88rem;">
+        Annuler
+      </a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

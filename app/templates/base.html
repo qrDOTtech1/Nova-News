@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}NovaNews{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    :root {
+      --nn-bg: #0d1117;
+      --nn-card: #161b22;
+      --nn-border: #21262d;
+      --nn-text: #e6edf3;
+      --nn-muted: #7d8590;
+      --nn-red: #E53935;
+      --nn-red-l: #EF5350;
+      --nn-red-glow: rgba(229, 57, 53, 0.15);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background-color: var(--nn-bg);
+      color: var(--nn-text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── NAVBAR ── */
+    .nn-navbar {
+      background: rgba(13, 17, 23, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--nn-border);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 0.6rem 1.2rem;
+    }
+
+    .nn-navbar-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .nn-logo {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .nn-logo .nova { color: var(--nn-text); }
+    .nn-logo .news { color: var(--nn-red); }
+
+    .nn-topics-scroll {
+      display: flex;
+      gap: 0.4rem;
+      overflow-x: auto;
+      flex: 1;
+      scrollbar-width: none;
+      padding: 0.2rem 0;
+    }
+    .nn-topics-scroll::-webkit-scrollbar { display: none; }
+
+    .nn-topic-pill {
+      background: var(--nn-card);
+      border: 1px solid var(--nn-border);
+      color: var(--nn-muted);
+      border-radius: 20px;
+      padding: 0.25rem 0.8rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .nn-topic-pill:hover {
+      background: var(--nn-red-glow);
+      border-color: var(--nn-red);
+      color: var(--nn-red-l);
+    }
+
+    .nn-search-form {
+      display: flex;
+      align-items: center;
+      background: var(--nn-card);
+      border: 1px solid var(--nn-border);
+      border-radius: 8px;
+      padding: 0.3rem 0.6rem;
+      gap: 0.4rem;
+      min-width: 180px;
+      max-width: 260px;
+    }
+    .nn-search-form input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--nn-text);
+      font-size: 0.85rem;
+      width: 100%;
+    }
+    .nn-search-form input::placeholder { color: var(--nn-muted); }
+    .nn-search-form button {
+      background: none;
+      border: none;
+      color: var(--nn-muted);
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+    .nn-search-form button:hover { color: var(--nn-red); }
+
+    .nn-user-menu .btn-icon {
+      background: var(--nn-card);
+      border: 1px solid var(--nn-border);
+      color: var(--nn-text);
+      border-radius: 8px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nn-user-menu .btn-icon:hover {
+      border-color: var(--nn-red);
+      color: var(--nn-red-l);
+    }
+
+    /* ── CARDS ── */
+    .nn-card {
+      background: var(--nn-card);
+      border: 1px solid var(--nn-border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+      height: 100%;
+    }
+    .nn-card:hover {
+      border-color: #30363d;
+      transform: translateY(-2px);
+    }
+
+    .nn-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .trust-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .trust-green { background: #4caf50; box-shadow: 0 0 6px #4caf5066; }
+    .trust-yellow { background: #ffc107; box-shadow: 0 0 6px #ffc10766; }
+    .trust-red { background: #f44336; box-shadow: 0 0 6px #f4433666; }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--nn-text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .section-title .line {
+      flex: 1;
+      height: 1px;
+      background: var(--nn-border);
+    }
+
+    /* ── FLASH ── */
+    .nn-flash {
+      max-width: 1400px;
+      margin: 0.75rem auto;
+      padding: 0 1.2rem;
+    }
+
+    /* ── FOOTER ── */
+    .nn-footer {
+      border-top: 1px solid var(--nn-border);
+      margin-top: 4rem;
+      padding: 2rem 1.2rem;
+      text-align: center;
+      color: var(--nn-muted);
+      font-size: 0.82rem;
+    }
+
+    /* ── UTILS ── */
+    .text-muted-nova { color: var(--nn-muted) !important; }
+    .text-red { color: var(--nn-red) !important; }
+
+    a { color: inherit; }
+    a:hover { color: var(--nn-red-l); }
+
+    .scrollbar-hide { scrollbar-width: none; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+    @media (max-width: 768px) {
+      .nn-search-form { display: none; }
+      .nn-topics-scroll { max-width: calc(100vw - 160px); }
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="nn-navbar">
+  <div class="nn-navbar-inner">
+    <a class="nn-logo" href="{{ url_for('index') }}">
+      <span class="nova">Nova</span><span class="news">News</span>
+    </a>
+
+    {% if user is defined and user %}
+    <div class="nn-topics-scroll">
+      {% set nav_topics = [
+        ('IA','🤖'),('TECH','💻'),('FINANCE','💹'),('SPORT','⚽'),
+        ('AUTO','🚗'),('CRYPTO','₿'),('SCIENCE','🔬'),('GAMING','🎮'),
+        ('SANTE','🏥'),('POLITIQUE','🏛️'),('CULTURE','🎭'),('GENERAL','🌐')
+      ] %}
+      {% for slug, icon in nav_topics %}
+      <a class="nn-topic-pill" href="{{ url_for('feed') }}#{{ slug }}">{{ icon }} {{ slug }}</a>
+      {% endfor %}
+    </div>
+
+    <form class="nn-search-form" action="{{ url_for('search') }}" method="get">
+      <i class="bi bi-search" style="color:var(--nn-muted);font-size:0.85rem;"></i>
+      <input type="text" name="q" placeholder="Rechercher..." value="{{ request.args.get('q','') }}" />
+      <button type="submit"><i class="bi bi-arrow-right"></i></button>
+    </form>
+
+    <div class="nn-user-menu d-flex align-items-center gap-2">
+      <a href="{{ url_for('settings') }}" class="btn-icon"><i class="bi bi-sliders"></i></a>
+      <span style="color:var(--nn-muted);font-size:0.82rem;">{{ user.username }}</span>
+      <a href="{{ url_for('logout') }}" class="btn-icon"><i class="bi bi-box-arrow-right"></i></a>
+    </div>
+    {% else %}
+    <div style="flex:1;"></div>
+    <div class="nn-user-menu d-flex align-items-center gap-2">
+      <a href="{{ url_for('login') }}" class="btn-icon">Se connecter</a>
+      <a href="{{ url_for('register') }}" class="btn-icon" style="background:var(--nn-red);border-color:var(--nn-red);color:#fff;">Créer un compte</a>
+    </div>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="nn-flash">
+  {% for category, message in messages %}
+  <div class="alert alert-{{ 'danger' if category == 'danger' else ('warning' if category == 'warning' else ('info' if category == 'info' else 'success')) }} alert-dismissible fade show" role="alert" style="background:var(--nn-card);border:1px solid var(--nn-border);color:var(--nn-text);border-radius:10px;">
+    {{ message }}
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<!-- CONTENT -->
+{% block content %}{% endblock %}
+
+<!-- FOOTER -->
+<footer class="nn-footer">
+  <span style="color:var(--nn-red);font-weight:700;">Nova</span><span style="font-weight:700;">News</span>
+  &nbsp;·&nbsp; Partie de l'écosystème <strong>NovaVivo</strong>
+  &nbsp;·&nbsp; <span>{{ now.year if now is defined else '2026' }}</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

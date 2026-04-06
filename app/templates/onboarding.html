@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Personnalisez votre flux — NovaNews{% endblock %}
+
+{% block head %}
+<style>
+  .onboarding-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+  .ob-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .ob-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(229,57,53,0.1);
+    border: 1px solid rgba(229,57,53,0.25);
+    color: var(--nn-red-l);
+    border-radius: 20px;
+    padding: 0.3rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+  }
+  .ob-header h1 {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    margin-bottom: 0.6rem;
+  }
+  .ob-header p { color: var(--nn-muted); font-size: 0.95rem; margin: 0; }
+
+  .steps-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+  }
+  .step-dot { width: 36px; height: 4px; border-radius: 2px; background: var(--nn-border); }
+  .step-dot.active { background: var(--nn-red); }
+
+  .section-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--nn-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 1rem;
+  }
+
+  /* Topic bubbles */
+  .topic-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-bottom: 2.5rem;
+  }
+  .topic-bubble {
+    position: relative;
+  }
+  .topic-bubble input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .topic-bubble label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--nn-card);
+    border: 1.5px solid var(--nn-border);
+    border-radius: 12px;
+    padding: 0.65rem 1.1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .topic-bubble label:hover {
+    border-color: #30363d;
+    transform: translateY(-1px);
+  }
+  .topic-bubble input:checked + label {
+    border-color: var(--nn-red);
+    background: rgba(229,57,53,0.1);
+    color: #fff;
+  }
+  .topic-bubble label .topic-icon {
+    font-size: 1.1rem;
+  }
+
+  /* Region buttons */
+  .region-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-bottom: 3rem;
+  }
+  .region-bubble {
+    position: relative;
+  }
+  .region-bubble input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .region-bubble label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--nn-card);
+    border: 1.5px solid var(--nn-border);
+    border-radius: 12px;
+    padding: 0.85rem 1.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.15s;
+    user-select: none;
+    min-width: 140px;
+    justify-content: center;
+  }
+  .region-bubble label:hover {
+    border-color: #30363d;
+    transform: translateY(-2px);
+  }
+  .region-bubble input:checked + label {
+    border-color: var(--nn-red);
+    background: rgba(229,57,53,0.1);
+    color: #fff;
+  }
+
+  .btn-submit-ob {
+    background: var(--nn-red);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  .btn-submit-ob:hover {
+    background: var(--nn-red-l);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(229,57,53,0.3);
+  }
+
+  .select-hint {
+    text-align: center;
+    color: var(--nn-muted);
+    font-size: 0.82rem;
+    margin-bottom: 1.2rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="onboarding-wrap">
+  <div class="ob-header">
+    <div class="ob-step"><i class="bi bi-stars"></i> Bienvenue, {{ user.username }} !</div>
+    <h1>Configurez votre flux en 1 minute</h1>
+    <p>Sélectionnez vos sujets et vos régions. Vous pourrez tout modifier ensuite.</p>
+  </div>
+
+  <div class="steps-bar">
+    <div class="step-dot active"></div>
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+  </div>
+
+  <form method="post" action="{{ url_for('onboarding') }}">
+
+    <!-- TOPICS -->
+    <div class="section-label"><i class="bi bi-tag-fill"></i> &nbsp;Étape 1 — Qu'est-ce qui vous intéresse ?</div>
+    <div class="select-hint">Choisissez au moins un sujet (plusieurs possibles)</div>
+
+    <div class="topic-grid">
+      {% set topics_meta = [
+        ('IA',        '🤖', '#A5D6A7'),
+        ('TECH',      '💻', '#90CAF9'),
+        ('FINANCE',   '💹', '#FFD54F'),
+        ('SPORT',     '⚽', '#81C784'),
+        ('AUTO',      '🚗', '#CE93D8'),
+        ('CRYPTO',    '₿',  '#FFB74D'),
+        ('SCIENCE',   '🔬', '#4DB6AC'),
+        ('GAMING',    '🎮', '#F48FB1'),
+        ('SANTE',     '🏥', '#80CBC4'),
+        ('POLITIQUE', '🏛️', '#EF9A9A'),
+        ('CULTURE',   '🎭', '#FFCC02'),
+        ('GENERAL',   '🌐', '#B0BEC5'),
+      ] %}
+      {% for slug, icon, color in topics_meta %}
+      <div class="topic-bubble">
+        <input type="checkbox" name="topics" value="{{ slug }}" id="t_{{ slug }}" />
+        <label for="t_{{ slug }}">
+          <span class="topic-icon">{{ icon }}</span>
+          {{ slug }}
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- REGIONS -->
+    <div class="section-label"><i class="bi bi-globe2"></i> &nbsp;Étape 2 — Vos régions</div>
+    <div class="select-hint">D'où voulez-vous recevoir l'information ?</div>
+
+    <div class="region-grid">
+      <div class="region-bubble">
+        <input type="checkbox" name="regions" value="FR" id="r_FR" />
+        <label for="r_FR">🇫🇷 France</label>
+      </div>
+      <div class="region-bubble">
+        <input type="checkbox" name="regions" value="PT" id="r_PT" />
+        <label for="r_PT">🇵🇹 Portugal</label>
+      </div>
+      <div class="region-bubble">
+        <input type="checkbox" name="regions" value="GLOBAL" id="r_GLOBAL" checked />
+        <label for="r_GLOBAL">🌍 International</label>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit-ob">
+      <i class="bi bi-lightning-charge-fill"></i> Lancer mon flux personnalisé
+    </button>
+
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Select all by default the most common topics
+  const defaults = ['TECH','FINANCE','GENERAL'];
+  defaults.forEach(t => {
+    const el = document.getElementById('t_' + t);
+    if (el) el.checked = true;
+  });
+</script>
+{% endblock %}

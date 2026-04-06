@@ -1,0 +1,686 @@
+{% extends "base.html" %}
+{% block title %}Mon Flux — NovaNews{% endblock %}
+
+{% block head %}
+<style>
+  .feed-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem 1.2rem 4rem;
+  }
+
+  /* ── LAYOUT ── */
+  .feed-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 1024px) {
+    .feed-layout { grid-template-columns: 1fr; }
+    .feed-sidebar { display: none; }
+  }
+
+  /* ── FEATURED ── */
+  .featured-card {
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 280px;
+    transition: border-color 0.2s;
+  }
+  .featured-card:hover { border-color: #30363d; }
+  @media (max-width: 768px) {
+    .featured-card { grid-template-columns: 1fr; }
+  }
+
+  .featured-img {
+    background: linear-gradient(135deg, #1c2128 0%, #21262d 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    min-height: 220px;
+    position: relative;
+    overflow: hidden;
+  }
+  .featured-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0; left: 0;
+  }
+  .featured-img .img-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, transparent 60%, var(--nn-card));
+  }
+
+  .featured-body {
+    padding: 1.8rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .featured-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(229,57,53,0.12);
+    border: 1px solid rgba(229,57,53,0.3);
+    color: var(--nn-red-l);
+    border-radius: 6px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.8rem;
+    width: fit-content;
+  }
+
+  .featured-title {
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    font-weight: 800;
+    line-height: 1.35;
+    margin-bottom: 1rem;
+    color: var(--nn-text);
+    text-decoration: none;
+    display: block;
+  }
+  .featured-title:hover { color: var(--nn-red-l); }
+
+  .ai-summary-box {
+    background: rgba(229,57,53,0.06);
+    border-left: 3px solid var(--nn-red);
+    border-radius: 0 10px 10px 0;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .ai-summary-box .ai-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--nn-red-l);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .ai-summary-box ul {
+    margin: 0;
+    padding: 0 0 0 1.1rem;
+    list-style: disc;
+  }
+  .ai-summary-box ul li {
+    font-size: 0.83rem;
+    color: var(--nn-muted);
+    line-height: 1.55;
+    margin-bottom: 0.2rem;
+  }
+
+  .featured-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+  }
+
+  /* ── NEWS CARD ── */
+  .news-card {
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .news-card:hover {
+    border-color: #30363d;
+    transform: translateY(-3px);
+  }
+
+  .card-img-area {
+    background: linear-gradient(135deg, #1c2128, #21262d);
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .card-img-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0; left: 0;
+  }
+
+  .card-body {
+    padding: 0.9rem 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 0.6rem;
+    color: var(--nn-text);
+    text-decoration: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-title:hover { color: var(--nn-red-l); }
+
+  .card-bullet {
+    font-size: 0.78rem;
+    color: var(--nn-muted);
+    line-height: 1.45;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.8rem;
+  }
+
+  .card-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--nn-muted);
+    flex-wrap: wrap;
+  }
+
+  .bookmark-btn {
+    background: none;
+    border: none;
+    color: var(--nn-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .bookmark-btn:hover { color: var(--nn-red-l); background: rgba(229,57,53,0.08); }
+  .bookmark-btn.active { color: var(--nn-red); }
+
+  /* ── HORIZONTAL SCROLL SECTION ── */
+  .topic-section { margin-bottom: 2.5rem; }
+
+  .cards-scroll {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  @media (max-width: 900px) {
+    .cards-scroll {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.8rem;
+      scrollbar-width: none;
+      padding-bottom: 0.5rem;
+    }
+    .cards-scroll::-webkit-scrollbar { display: none; }
+    .cards-scroll .news-card { min-width: 240px; max-width: 260px; }
+  }
+
+  /* ── MUST READ ── */
+  .must-read-card {
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    transition: border-color 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .must-read-card:hover { border-color: #30363d; color: var(--nn-red-l); }
+  .must-read-num {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--nn-border);
+    line-height: 1;
+    min-width: 24px;
+  }
+  .must-read-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .feed-sidebar {
+    position: sticky;
+    top: 80px;
+  }
+  .sidebar-card {
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+  .sidebar-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--nn-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .trending-item {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--nn-border);
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.15s;
+  }
+  .trending-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .trending-item:hover { color: var(--nn-red-l); }
+  .trending-num { font-size: 1.1rem; font-weight: 900; color: var(--nn-border); min-width: 20px; line-height: 1.4; }
+  .trending-text { font-size: 0.82rem; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    background: var(--nn-card);
+    border: 1px dashed var(--nn-border);
+    border-radius: 16px;
+  }
+  .empty-state .empty-icon { font-size: 3.5rem; margin-bottom: 1.2rem; }
+  .empty-state h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.6rem; }
+  .empty-state p { color: var(--nn-muted); font-size: 0.92rem; max-width: 400px; margin: 0 auto 1.5rem; }
+  .btn-ingest {
+    background: var(--nn-red);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 1.8rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-ingest:hover { background: var(--nn-red-l); color: #fff; transform: translateY(-2px); }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set cat_colors = {
+  'TECH': '#90CAF9', 'FINANCE': '#FFD54F', 'SPORT': '#81C784',
+  'AUTO': '#CE93D8', 'CRYPTO': '#FFB74D', 'SCIENCE': '#4DB6AC',
+  'GAMING': '#F48FB1', 'SANTE': '#80CBC4', 'POLITIQUE': '#EF9A9A',
+  'CULTURE': '#FFCC02', 'GENERAL': '#B0BEC5', 'IA': '#A5D6A7'
+} %}
+{% set cat_icons = {
+  'TECH': '💻', 'FINANCE': '💹', 'SPORT': '⚽', 'AUTO': '🚗',
+  'CRYPTO': '₿', 'SCIENCE': '🔬', 'GAMING': '🎮', 'SANTE': '🏥',
+  'POLITIQUE': '🏛️', 'CULTURE': '🎭', 'GENERAL': '🌐', 'IA': '🤖'
+} %}
+{% set region_flags = {'FR': '🇫🇷', 'PT': '🇵🇹', 'GLOBAL': '🌍'} %}
+
+<div class="feed-wrap">
+
+  {% set has_content = featured or sections or latest %}
+
+  {% if not has_content %}
+  <!-- EMPTY STATE -->
+  <div class="empty-state">
+    <div class="empty-icon">📡</div>
+    <h2>Les articles arrivent bientôt...</h2>
+    <p>Votre flux est configuré mais aucun article n'a encore été ingéré. Déclenchez l'ingestion manuellement pour commencer.</p>
+    <button class="btn-ingest" id="ingestBtn" onclick="triggerIngest()">
+      <i class="bi bi-arrow-repeat"></i> Lancer l'ingestion
+    </button>
+    <p style="margin-top:1rem;font-size:0.8rem;color:var(--nn-muted);" id="ingestStatus"></p>
+  </div>
+
+  {% else %}
+
+  <div class="feed-layout">
+    <!-- MAIN COLUMN -->
+    <div>
+
+      <!-- FEATURED -->
+      {% if featured %}
+      <div id="FEATURED" style="margin-bottom:0.6rem;">
+        <div class="section-title">
+          <span>⭐ À la une</span>
+          <span class="line"></span>
+        </div>
+      </div>
+      <div class="featured-card">
+        <div class="featured-img">
+          {% if featured.illustration_url and featured.illustration_url.startswith('http') %}
+            <img src="{{ featured.illustration_url }}" alt="" loading="lazy" onerror="this.style.display='none'" />
+            <div class="img-overlay"></div>
+          {% else %}
+            <span style="position:relative;z-index:1;">{{ cat_icons.get(featured.category, '📰') }}</span>
+          {% endif %}
+        </div>
+        <div class="featured-body">
+          <div>
+            <div class="featured-label">
+              <i class="bi bi-star-fill"></i> À LA UNE
+            </div>
+            <a class="featured-title" href="{{ url_for('article', article_id=featured.id) }}">
+              {{ featured.raw_title }}
+            </a>
+            <div class="ai-summary-box">
+              <div class="ai-label"><span>🧠</span> Résumé IA</div>
+              <ul>
+                {% if featured.ai_summary %}
+                  {% for point in featured.ai_summary[:3] %}
+                  <li>{{ point }}</li>
+                  {% endfor %}
+                {% else %}
+                  <li style="font-style:italic;">Résumé en cours...</li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+          <div class="featured-meta">
+            <span class="nn-badge" style="background:rgba({{ '144,202,249' if featured.category=='TECH' else '229,57,53' }},0.15);color:{{ cat_colors.get(featured.category,'#B0BEC5') }};">
+              {{ cat_icons.get(featured.category,'📰') }} {{ featured.category }}
+            </span>
+            {% set flag = region_flags.get(featured.source_region, '🌍') %}
+            <span style="font-size:0.78rem;color:var(--nn-muted);">{{ flag }} {{ featured.source_region }}</span>
+            {% if featured.trust_score %}
+              {% if featured.trust_score > 0.8 %}
+                <span class="trust-dot trust-green" title="Score de confiance: {{ '%.0f'|format(featured.trust_score*100) }}%"></span>
+              {% elif featured.trust_score > 0.5 %}
+                <span class="trust-dot trust-yellow" title="Score de confiance: {{ '%.0f'|format(featured.trust_score*100) }}%"></span>
+              {% else %}
+                <span class="trust-dot trust-red" title="Score de confiance: {{ '%.0f'|format(featured.trust_score*100) }}%"></span>
+              {% endif %}
+            {% endif %}
+            <span style="font-size:0.78rem;color:var(--nn-muted);" class="time-ago" data-ts="{{ featured.published_at.isoformat() if featured.published_at else '' }}"></span>
+            <button class="bookmark-btn ms-auto {{ 'active' if featured.id in bookmarks else '' }}"
+              onclick="toggleBookmark('{{ featured.id }}', this)" title="Sauvegarder">
+              <i class="bi bi-bookmark{{ '-fill' if featured.id in bookmarks else '' }}"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- MUST READ -->
+      {% if must_read %}
+      <div style="margin-bottom:2rem;">
+        <div class="section-title">
+          <span>🧠 À lire absolument</span>
+          <span class="line"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          {% for art in must_read %}
+          <a class="must-read-card" href="{{ url_for('article', article_id=art.id) }}">
+            <span class="must-read-num">{{ loop.index }}</span>
+            <div style="flex:1;">
+              <span class="must-read-title">{{ art.raw_title }}</span>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;">
+                <span class="nn-badge" style="font-size:0.68rem;padding:0.15rem 0.45rem;background:rgba(229,57,53,0.1);color:{{ cat_colors.get(art.category,'#B0BEC5') }};">{{ art.category }}</span>
+                {% if art.trust_score %}
+                  {% if art.trust_score > 0.8 %}<span class="trust-dot trust-green"></span>
+                  {% elif art.trust_score > 0.5 %}<span class="trust-dot trust-yellow"></span>
+                  {% else %}<span class="trust-dot trust-red"></span>
+                  {% endif %}
+                {% endif %}
+                <span style="font-size:0.75rem;color:var(--nn-muted);" class="time-ago" data-ts="{{ art.published_at.isoformat() if art.published_at else '' }}"></span>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- TOPIC SECTIONS -->
+      {% for topic, articles in sections.items() %}
+      <div class="topic-section" id="{{ topic }}">
+        <div class="section-title">
+          <span>{{ cat_icons.get(topic,'📰') }} {{ topic }}</span>
+          <span class="line"></span>
+          <span style="font-size:0.75rem;color:var(--nn-muted);">{{ articles|length }} articles</span>
+        </div>
+        <div class="cards-scroll">
+          {% for art in articles %}
+          <div class="news-card">
+            <div class="card-img-area" style="background:linear-gradient(135deg,{{ cat_colors.get(art.category,'#21262d') }}22,#21262d);">
+              {% if art.illustration_url and art.illustration_url.startswith('http') %}
+                <img src="{{ art.illustration_url }}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<span style=\'font-size:2rem;\'>{{ cat_icons.get(art.category,\"📰\") }}</span>'" />
+              {% else %}
+                <span>{{ cat_icons.get(art.category,'📰') }}</span>
+              {% endif %}
+            </div>
+            <div class="card-body">
+              <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.5rem;">
+                <span class="nn-badge" style="background:{{ cat_colors.get(art.category,'#B0BEC5') }}22;color:{{ cat_colors.get(art.category,'#B0BEC5') }};font-size:0.68rem;">
+                  {{ art.category }}
+                </span>
+                <span style="font-size:0.72rem;color:var(--nn-muted);" class="time-ago" data-ts="{{ art.published_at.isoformat() if art.published_at else '' }}"></span>
+              </div>
+              <a class="card-title" href="{{ url_for('article', article_id=art.id) }}">{{ art.raw_title }}</a>
+              <p class="card-bullet">
+                {% if art.ai_summary and art.ai_summary|length > 0 %}
+                  {{ art.ai_summary[0] }}
+                {% else %}
+                  <em>Résumé en cours...</em>
+                {% endif %}
+              </p>
+              <div class="card-footer-row">
+                <div class="card-meta">
+                  <span>{{ region_flags.get(art.source_region,'🌍') }}</span>
+                  {% if art.trust_score %}
+                    {% if art.trust_score > 0.8 %}<span class="trust-dot trust-green" title="{{ '%.0f'|format(art.trust_score*100) }}%"></span>
+                    {% elif art.trust_score > 0.5 %}<span class="trust-dot trust-yellow" title="{{ '%.0f'|format(art.trust_score*100) }}%"></span>
+                    {% else %}<span class="trust-dot trust-red" title="{{ '%.0f'|format(art.trust_score*100) }}%"></span>
+                    {% endif %}
+                  {% endif %}
+                </div>
+                <button class="bookmark-btn {{ 'active' if art.id in bookmarks else '' }}"
+                  onclick="toggleBookmark('{{ art.id }}', this)">
+                  <i class="bi bi-bookmark{{ '-fill' if art.id in bookmarks else '' }}"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- LATEST (if no sections) -->
+      {% if not sections and latest %}
+      <div class="topic-section">
+        <div class="section-title">
+          <span>🕒 Derniers articles</span>
+          <span class="line"></span>
+        </div>
+        <div class="cards-scroll">
+          {% for art in latest %}
+          <div class="news-card">
+            <div class="card-img-area" style="background:linear-gradient(135deg,{{ cat_colors.get(art.category,'#21262d') }}22,#21262d);">
+              {% if art.illustration_url and art.illustration_url.startswith('http') %}
+                <img src="{{ art.illustration_url }}" alt="" loading="lazy" onerror="this.style.display='none'" />
+              {% else %}
+                <span>{{ cat_icons.get(art.category,'📰') }}</span>
+              {% endif %}
+            </div>
+            <div class="card-body">
+              <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.5rem;">
+                <span class="nn-badge" style="background:{{ cat_colors.get(art.category,'#B0BEC5') }}22;color:{{ cat_colors.get(art.category,'#B0BEC5') }};font-size:0.68rem;">{{ art.category }}</span>
+                <span style="font-size:0.72rem;color:var(--nn-muted);" class="time-ago" data-ts="{{ art.published_at.isoformat() if art.published_at else '' }}"></span>
+              </div>
+              <a class="card-title" href="{{ url_for('article', article_id=art.id) }}">{{ art.raw_title }}</a>
+              <p class="card-bullet">
+                {% if art.ai_summary and art.ai_summary|length > 0 %}{{ art.ai_summary[0] }}
+                {% else %}<em>Résumé en cours...</em>{% endif %}
+              </p>
+              <div class="card-footer-row">
+                <div class="card-meta">
+                  <span>{{ region_flags.get(art.source_region,'🌍') }}</span>
+                  {% if art.trust_score > 0.8 %}<span class="trust-dot trust-green"></span>
+                  {% elif art.trust_score > 0.5 %}<span class="trust-dot trust-yellow"></span>
+                  {% else %}<span class="trust-dot trust-red"></span>{% endif %}
+                </div>
+                <button class="bookmark-btn {{ 'active' if art.id in bookmarks else '' }}"
+                  onclick="toggleBookmark('{{ art.id }}', this)">
+                  <i class="bi bi-bookmark{{ '-fill' if art.id in bookmarks else '' }}"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div><!-- /main -->
+
+    <!-- SIDEBAR -->
+    <aside class="feed-sidebar">
+      {% if latest %}
+      <div class="sidebar-card">
+        <div class="sidebar-title"><i class="bi bi-graph-up-arrow"></i> Tendances</div>
+        {% for art in latest[:5] %}
+        <a class="trending-item" href="{{ url_for('article', article_id=art.id) }}">
+          <span class="trending-num">{{ loop.index }}</span>
+          <span class="trending-text">{{ art.raw_title }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="sidebar-card">
+        <div class="sidebar-title"><i class="bi bi-sliders"></i> Vos sujets</div>
+        {% set prefs_topics = sections.keys()|list %}
+        {% if prefs_topics %}
+        <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+          {% for t in prefs_topics %}
+          <a href="#{{ t }}" class="nn-topic-pill" style="font-size:0.78rem;">
+            {{ cat_icons.get(t,'') }} {{ t }}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <a href="{{ url_for('settings') }}" style="display:block;margin-top:1rem;font-size:0.82rem;color:var(--nn-red-l);text-decoration:none;">
+          <i class="bi bi-pencil-fill"></i> Modifier mes préférences
+        </a>
+      </div>
+
+      <div class="sidebar-card" style="text-align:center;">
+        <div class="sidebar-title" style="justify-content:center;"><i class="bi bi-arrow-repeat"></i> Actualiser</div>
+        <p style="font-size:0.8rem;color:var(--nn-muted);margin-bottom:1rem;">Lancer une nouvelle ingestion des flux RSS</p>
+        <button class="btn-ingest" style="width:100%;justify-content:center;" id="ingestBtnSide" onclick="triggerIngest()">
+          <i class="bi bi-arrow-repeat"></i> Lancer l'ingestion
+        </button>
+        <p style="margin-top:0.8rem;font-size:0.76rem;color:var(--nn-muted);" id="ingestStatusSide"></p>
+      </div>
+    </aside>
+  </div><!-- /feed-layout -->
+
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Time ago
+  function timeAgo(isoStr) {
+    if (!isoStr) return '';
+    const d = new Date(isoStr.endsWith('Z') ? isoStr : isoStr + 'Z');
+    const now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return 'À l\'instant';
+    if (diff < 3600) return 'il y a ' + Math.floor(diff/60) + 'min';
+    if (diff < 86400) return 'il y a ' + Math.floor(diff/3600) + 'h';
+    if (diff < 172800) return 'Hier';
+    return d.toLocaleDateString('fr-FR', {day:'numeric',month:'short'});
+  }
+  document.querySelectorAll('.time-ago').forEach(el => {
+    const ts = el.dataset.ts;
+    if (ts) el.textContent = timeAgo(ts);
+  });
+
+  // Bookmark toggle
+  async function toggleBookmark(id, btn) {
+    try {
+      const res = await fetch('/api/bookmark/' + id, { method: 'POST' });
+      const data = await res.json();
+      const icon = btn.querySelector('i');
+      if (data.bookmarked) {
+        icon.className = 'bi bi-bookmark-fill';
+        btn.classList.add('active');
+      } else {
+        icon.className = 'bi bi-bookmark';
+        btn.classList.remove('active');
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  // Trigger ingestion
+  async function triggerIngest() {
+    const btns = [document.getElementById('ingestBtn'), document.getElementById('ingestBtnSide')];
+    const statuses = [document.getElementById('ingestStatus'), document.getElementById('ingestStatusSide')];
+
+    btns.forEach(b => { if(b) { b.disabled = true; b.innerHTML = '<i class="bi bi-hourglass-split"></i> Ingestion en cours...'; } });
+    statuses.forEach(s => { if(s) s.textContent = 'Démarrage...'; });
+
+    try {
+      const res = await fetch('/api/ingest', {
+        method: 'POST',
+        headers: { 'X-Internal-Key': 'nova-internal-key-change-in-prod' }
+      });
+      const data = await res.json();
+      statuses.forEach(s => { if(s) s.textContent = data.status || 'Ingestion démarrée !'; });
+      setTimeout(() => { window.location.reload(); }, 3000);
+    } catch(e) {
+      statuses.forEach(s => { if(s) s.textContent = 'Erreur lors du démarrage.'; });
+      btns.forEach(b => { if(b) { b.disabled = false; b.innerHTML = '<i class="bi bi-arrow-repeat"></i> Réessayer'; } });
+    }
+  }
+</script>
+{% endblock %}

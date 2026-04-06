@@ -17,18 +17,32 @@ logger = logging.getLogger(__name__)
 SOURCES = {
     "FR": [
         {"url": "https://www.lemonde.fr/rss/une.xml", "category": "GENERAL"},
-        {
-            "url": "https://investir.lesechos.fr/rss/les-plus-lus.xml",
-            "category": "FINANCE",
-        },
+        {"url": "https://www.lemonde.fr/sciences/rss_full.xml", "category": "SCIENCE"},
+        {"url": "https://www.lefigaro.fr/rss/figaro_actualites.xml", "category": "GENERAL"},
+        {"url": "https://investir.lesechos.fr/rss/les-plus-lus.xml", "category": "FINANCE"},
+        {"url": "https://www.capital.fr/feed", "category": "FINANCE"},
+        {"url": "https://www.numerama.com/feed/", "category": "TECH"},
+        {"url": "https://www.lequipe.fr/rss/actu_rss.xml", "category": "SPORT"},
         {"url": "https://www.autoplus.fr/feed", "category": "AUTO"},
+        {"url": "https://www.lefigaro.fr/sante/rss_actualites.xml", "category": "SANTE"},
     ],
     "PT": [
         {"url": "https://feeds.feedburner.com/PublicoRSS", "category": "GENERAL"},
         {"url": "https://eco.sapo.pt/feed/", "category": "FINANCE"},
+        {"url": "https://shifter.pt/feed/", "category": "TECH"},
         {"url": "https://www.razaoautomovel.com/feed/", "category": "AUTO"},
     ],
-    "GLOBAL": [{"url": "https://techcrunch.com/feed/", "category": "TECH"}],
+    "GLOBAL": [
+        {"url": "https://techcrunch.com/feed/", "category": "TECH"},
+        {"url": "https://feeds.bbci.co.uk/news/world/rss.xml", "category": "GENERAL"},
+        {"url": "https://feeds.bbci.co.uk/sport/rss.xml", "category": "SPORT"},
+        {"url": "https://coindesk.com/arc/outboundfeeds/rss/", "category": "CRYPTO"},
+        {"url": "https://decrypt.co/feed", "category": "CRYPTO"},
+        {"url": "https://www.nasa.gov/feed/", "category": "SCIENCE"},
+        {"url": "https://feeds.ign.com/ign/all", "category": "GAMING"},
+        {"url": "https://www.theverge.com/rss/index.xml", "category": "TECH"},
+        {"url": "https://www.wired.com/feed/rss", "category": "TECH"},
+    ],
 }
 
 
@@ -48,9 +62,13 @@ def ingest_and_enrich():
             category = source["category"]
 
             logger.info(f"Lecture flux [{region}] {feed_url}...")
-            parsed_feed = feedparser.parse(feed_url)
+            try:
+                parsed_feed = feedparser.parse(feed_url)
+            except Exception as e:
+                logger.error(f"[Ingestion] Erreur parsing flux {feed_url}: {e}")
+                continue
 
-            # Limite à 5 articles par flux pour l'instant (performance)
+            # Limite à 5 articles par flux (performance)
             for entry in parsed_feed.entries[:5]:
                 # Vérifier si l'article existe déjà en DB
                 existing = NewsItem.query.filter_by(source_url=entry.link).first()
@@ -60,18 +78,20 @@ def ingest_and_enrich():
                 logger.info(f"-> Traitement : {entry.title}")
 
                 # 1. Extraction du texte brut (SOTA Cleaning)
-                downloaded = fetch_url(entry.link)
-                clean_content = extract(downloaded) if downloaded else ""
+                try:
+                    downloaded = fetch_url(entry.link)
+                    clean_content = extract(downloaded) if downloaded else ""
+                except Exception as e:
+                    logger.warning(f"[Trafilatura] Erreur extraction {entry.link}: {e}")
+                    clean_content = ""
 
                 if not clean_content:
-                    logger.warning(
-                        f"Impossible d'extraire le contenu pour {entry.link}"
-                    )
+                    logger.warning(f"Impossible d'extraire le contenu pour {entry.link}")
                     clean_content = entry.get("summary", "Contenu indisponible.")
 
                 # 2. Enrichissement via Tavily (Recherche de contexte + IMAGES)
                 context_snippets = []
-                illustration_url = "default_nova.jpg"
+                illustration_url = None
                 if tavily:
                     try:
                         search_query = f"{entry.title} {region}"
@@ -81,16 +101,13 @@ def ingest_and_enrich():
                             include_images=True,
                             max_results=3,
                         )
-                        context_snippets = [
-                            r["content"] for r in context.get("results", [])
-                        ]
+                        context_snippets = [r["content"] for r in context.get("results", [])]
                         if context.get("images"):
                             illustration_url = context["images"][0]
                     except Exception as e:
                         logger.error(f"[Tavily] Erreur lors de la recherche : {e}")
 
                 # 3. Analyse via le LLM de NovaAdmin (Orchestrateur)
-                # On lui donne le texte et le contexte Tavily
                 ai_data = process_news_ai(clean_content, context_snippets)
                 ai_summary = ai_data.get("ai_summary", ["Résumé en cours..."])
                 tags = ai_data.get("tags", [])
@@ -101,7 +118,7 @@ def ingest_and_enrich():
                 if hasattr(entry, "published"):
                     try:
                         pub_date = parsedate_to_datetime(entry.published)
-                    except:
+                    except Exception:
                         pass
 
                 # Création de l'objet temporaire pour le bridge
@@ -130,10 +147,14 @@ def ingest_and_enrich():
                 )
 
                 db.session.add(news_item)
-                db.session.commit()
-                logger.info(
-                    f"✅ News ajoutée : {entry.title[:30]}... ({', '.join(linked_apps)})"
-                )
+                try:
+                    db.session.commit()
+                    logger.info(f"News ajoutée : {entry.title[:50]}...")
+                except Exception as e:
+                    db.session.rollback()
+                    logger.error(f"[DB] Erreur commit: {e}")
 
                 # Attente pour ne pas spammer les API
                 time.sleep(2)
+
+    logger.info("Ingestion NovaNews terminée.")

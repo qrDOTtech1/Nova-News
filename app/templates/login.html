@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Connexion — NovaNews{% endblock %}
+
+{% block head %}
+<style>
+  .auth-wrap {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+  .auth-box {
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 18px;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 420px;
+  }
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .auth-logo span.nova { color: var(--nn-text); font-size: 1.6rem; font-weight: 900; }
+  .auth-logo span.news { color: var(--nn-red); font-size: 1.6rem; font-weight: 900; }
+  .auth-logo p { color: var(--nn-muted); font-size: 0.9rem; margin-top: 0.4rem; }
+  .nn-input {
+    background: var(--nn-bg);
+    border: 1px solid var(--nn-border);
+    border-radius: 10px;
+    color: var(--nn-text);
+    padding: 0.75rem 1rem;
+    width: 100%;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+  .nn-input:focus {
+    outline: none;
+    border-color: var(--nn-red);
+    box-shadow: 0 0 0 3px rgba(229,57,53,0.12);
+  }
+  .nn-input::placeholder { color: var(--nn-muted); }
+  .nn-label {
+    display: block;
+    color: var(--nn-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .btn-submit {
+    background: var(--nn-red);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.85rem;
+    width: 100%;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.5rem;
+  }
+  .btn-submit:hover {
+    background: var(--nn-red-l);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(229,57,53,0.25);
+  }
+  .auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--nn-muted);
+    font-size: 0.88rem;
+  }
+  .auth-switch a { color: var(--nn-red-l); text-decoration: none; font-weight: 600; }
+  .auth-switch a:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div><span class="nova">Nova</span><span class="news">News</span></div>
+      <p>Bon retour parmi nous 👋</p>
+    </div>
+
+    <form method="post" action="{{ url_for('login') }}" novalidate>
+      <div style="margin-bottom:1.2rem;">
+        <label class="nn-label">Email ou nom d'utilisateur</label>
+        <input
+          class="nn-input"
+          type="text"
+          name="identifier"
+          placeholder="vous@email.com"
+          value="{{ identifier|default('') }}"
+          required
+          autocomplete="username"
+        />
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <label class="nn-label">Mot de passe</label>
+        <input
+          class="nn-input"
+          type="password"
+          name="password"
+          placeholder="••••••••"
+          required
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button type="submit" class="btn-submit">
+        <i class="bi bi-box-arrow-in-right"></i> Se connecter
+      </button>
+    </form>
+
+    <div class="auth-switch">
+      Pas encore de compte ? <a href="{{ url_for('register') }}">Créer un compte</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

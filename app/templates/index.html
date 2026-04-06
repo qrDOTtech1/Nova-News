@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}NovaNews — L'information qui vous ressemble{% endblock %}
+
+{% block head %}
+<style>
+  .hero {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 1.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(229,57,53,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(229,57,53,0.1);
+    border: 1px solid rgba(229,57,53,0.3);
+    color: var(--nn-red-l);
+    border-radius: 20px;
+    padding: 0.35rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    letter-spacing: 0.3px;
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--nn-red);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    max-width: 760px;
+    margin-bottom: 1.5rem;
+    color: var(--nn-text);
+  }
+
+  .hero h1 span { color: var(--nn-red); }
+
+  .hero p.subtitle {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--nn-muted);
+    max-width: 580px;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 4rem;
+  }
+
+  .btn-nova-primary {
+    background: var(--nn-red);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.85rem 2rem;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-nova-primary:hover {
+    background: var(--nn-red-l);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(229,57,53,0.3);
+  }
+
+  .btn-nova-outline {
+    background: transparent;
+    color: var(--nn-text);
+    border: 1px solid var(--nn-border);
+    border-radius: 10px;
+    padding: 0.85rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-nova-outline:hover {
+    border-color: var(--nn-red);
+    color: var(--nn-red-l);
+    transform: translateY(-2px);
+  }
+
+  /* Features */
+  .features {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem 5rem;
+  }
+
+  .feature-card {
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    transition: border-color 0.2s, transform 0.2s;
+    height: 100%;
+  }
+  .feature-card:hover {
+    border-color: rgba(229,57,53,0.4);
+    transform: translateY(-4px);
+  }
+
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    color: var(--nn-text);
+  }
+  .feature-card p {
+    color: var(--nn-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Mock card */
+  .mock-card {
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    max-width: 380px;
+    text-align: left;
+    margin: 0 auto 4rem;
+  }
+
+  .mock-img-placeholder {
+    background: linear-gradient(135deg, #1c2128, #21262d);
+    border-radius: 10px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--nn-border);
+    margin: 0 auto;
+    max-width: 1100px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="live-dot"></span>
+    🔴 LIVE &nbsp;·&nbsp; Votre monde en temps réel
+  </div>
+
+  <h1>L'information qui vous ressemble.<br /><span>Rien de plus. Rien de moins.</span></h1>
+
+  <p class="subtitle">
+    NovaNews apprend ce qui vous intéresse et vous délivre l'essentiel —
+    résumé par l'IA, vérifié par l'algorithme, personnalisé pour vous.
+  </p>
+
+  <div class="hero-cta">
+    <a href="{{ url_for('register') }}" class="btn-nova-primary">
+      <i class="bi bi-rocket-takeoff-fill"></i> Créer mon compte
+    </a>
+    <a href="{{ url_for('login') }}" class="btn-nova-outline">
+      <i class="bi bi-box-arrow-in-right"></i> Se connecter
+    </a>
+  </div>
+
+  <!-- Mock card preview -->
+  <div class="mock-card">
+    <div class="mock-img-placeholder">💻</div>
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+      <span class="nn-badge" style="background:rgba(144,202,249,0.15);color:#90CAF9;">TECH</span>
+      <span style="color:var(--nn-muted);font-size:0.78rem;">TechCrunch · il y a 23min</span>
+      <span class="trust-dot trust-green ms-auto"></span>
+    </div>
+    <p style="font-weight:700;font-size:0.95rem;margin-bottom:0.8rem;line-height:1.4;">
+      OpenAI dévoile son nouveau modèle de raisonnement o3 avec des capacités inédites
+    </p>
+    <div style="background:rgba(229,57,53,0.07);border-left:3px solid var(--nn-red);border-radius:0 8px 8px 0;padding:0.7rem 0.9rem;">
+      <p style="font-size:0.8rem;color:var(--nn-muted);margin:0;line-height:1.5;">
+        🧠 <em>Résumé IA</em> — Performance supérieure aux modèles précédents sur les benchmarks mathématiques
+      </p>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.9rem;">
+      <span style="color:var(--nn-muted);font-size:0.78rem;">🌍 GLOBAL</span>
+      <button style="background:none;border:none;color:var(--nn-muted);font-size:1rem;cursor:pointer;">
+        <i class="bi bi-bookmark"></i>
+      </button>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- FEATURES -->
+<section class="features" style="padding-top:4rem;">
+  <div style="text-align:center;margin-bottom:3rem;">
+    <h2 style="font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;margin-bottom:0.8rem;">
+      Pourquoi NovaNews ?
+    </h2>
+    <p style="color:var(--nn-muted);font-size:1rem;max-width:500px;margin:0 auto;">
+      Une expérience de lecture conçue pour les gens qui veulent s'informer, pas se noyer.
+    </p>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(229,57,53,0.12);">🎯</div>
+        <h3>Personnalisation totale</h3>
+        <p>Choisissez vos sujets (Tech, Finance, Sport, IA…) et vos régions (France, Portugal, Monde). Votre flux, vos règles.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(100,181,246,0.12);">🧠</div>
+        <h3>Résumés IA 3 points</h3>
+        <p>Chaque article est analysé par notre IA et condensé en 3 points essentiels. L'info en 15 secondes, pas 15 minutes.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(76,175,80,0.12);">✅</div>
+        <h3>Score de confiance</h3>
+        <p>Chaque article reçoit un score de fiabilité calculé par notre algorithme. Vert = fiable. Rouge = à vérifier.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-2">
+    <div class="col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(255,193,7,0.12);">🔖</div>
+        <h3>Bookmarks intelligents</h3>
+        <p>Sauvegardez les articles qui vous intéressent en un clic. Retrouvez-les quand vous voulez, sans publicité.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(206,147,216,0.12);">🌍</div>
+        <h3>Sources multirégionales</h3>
+        <p>Lemonde, BBC, TechCrunch, Shifter.pt et bien d'autres. 20+ sources FR, PT et mondiales mises à jour toutes les 30min.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(77,182,172,0.12);">⚡</div>
+        <h3>Intégré à NovaVivo</h3>
+        <p>NovaNews fait partie de l'écosystème NovaVivo. Les articles liés à vos autres apps (NovaAuto, NovaFact…) sont mis en avant.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Bottom -->
+<section style="text-align:center;padding:4rem 1.5rem 5rem;position:relative;">
+  <div style="max-width:600px;margin:0 auto;">
+    <h2 style="font-size:clamp(1.5rem,3vw,2rem);font-weight:800;margin-bottom:1rem;">
+      Prêt à lire autrement ?
+    </h2>
+    <p style="color:var(--nn-muted);margin-bottom:2rem;font-size:1rem;">
+      Créez votre compte gratuitement et personnalisez votre premier flux en moins de 2 minutes.
+    </p>
+    <a href="{{ url_for('register') }}" class="btn-nova-primary" style="font-size:1.05rem;padding:1rem 2.5rem;">
+      <i class="bi bi-lightning-charge-fill"></i> Commencer maintenant
+    </a>
+  </div>
+</section>
+{% endblock %}

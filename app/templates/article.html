@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% block title %}{{ article.raw_title[:60] }}... — NovaNews{% endblock %}
+
+{% block head %}
+<style>
+  .article-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+  }
+
+  .breadcrumb-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.8rem;
+    flex-wrap: wrap;
+  }
+  .breadcrumb-row a {
+    color: var(--nn-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: color 0.15s;
+  }
+  .breadcrumb-row a:hover { color: var(--nn-red-l); }
+  .breadcrumb-sep { color: var(--nn-border); font-size: 0.85rem; }
+
+  .article-hero-img {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #1c2128, #21262d);
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    position: relative;
+  }
+  .article-hero-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0; left: 0;
+    border-radius: 16px;
+  }
+
+  .article-title {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    margin-bottom: 1.2rem;
+    color: var(--nn-text);
+  }
+
+  .article-meta-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 1.2rem;
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    border-radius: 12px;
+    margin-bottom: 1.8rem;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    color: var(--nn-muted);
+  }
+  .meta-item a {
+    color: var(--nn-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .meta-item a:hover { color: var(--nn-red-l); }
+
+  .trust-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--nn-muted);
+  }
+  .trust-bar {
+    width: 80px;
+    height: 6px;
+    background: var(--nn-border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .trust-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  /* AI Summary */
+  .ai-summary-section {
+    background: linear-gradient(135deg, rgba(229,57,53,0.06), rgba(229,57,53,0.02));
+    border: 1px solid rgba(229,57,53,0.2);
+    border-radius: 14px;
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .ai-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .ai-summary-header span.label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--nn-red-l);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .ai-badge {
+    background: rgba(229,57,53,0.15);
+    color: var(--nn-red-l);
+    border-radius: 6px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .ai-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .ai-points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    font-size: 0.92rem;
+    color: var(--nn-text);
+    line-height: 1.55;
+  }
+  .ai-points li .point-num {
+    background: rgba(229,57,53,0.15);
+    color: var(--nn-red-l);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Full text */
+  .article-body {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--nn-text);
+    margin-bottom: 2.5rem;
+  }
+  .article-body p {
+    margin-bottom: 1.2rem;
+    color: #c9d1d9;
+  }
+
+  /* Action bar */
+  .article-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--nn-border);
+  }
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--nn-card);
+    border: 1px solid var(--nn-border);
+    color: var(--nn-text);
+    border-radius: 10px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .btn-action:hover {
+    border-color: var(--nn-red);
+    color: var(--nn-red-l);
+  }
+  .btn-action.bookmarked {
+    background: rgba(229,57,53,0.1);
+    border-color: var(--nn-red);
+    color: var(--nn-red-l);
+  }
+
+  .source-link {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--nn-muted);
+    font-size: 0.82rem;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .source-link:hover { color: var(--nn-red-l); }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set cat_colors = {
+  'TECH': '#90CAF9', 'FINANCE': '#FFD54F', 'SPORT': '#81C784',
+  'AUTO': '#CE93D8', 'CRYPTO': '#FFB74D', 'SCIENCE': '#4DB6AC',
+  'GAMING': '#F48FB1', 'SANTE': '#80CBC4', 'POLITIQUE': '#EF9A9A',
+  'CULTURE': '#FFCC02', 'GENERAL': '#B0BEC5', 'IA': '#A5D6A7'
+} %}
+{% set cat_icons = {
+  'TECH': '💻', 'FINANCE': '💹', 'SPORT': '⚽', 'AUTO': '🚗',
+  'CRYPTO': '₿', 'SCIENCE': '🔬', 'GAMING': '🎮', 'SANTE': '🏥',
+  'POLITIQUE': '🏛️', 'CULTURE': '🎭', 'GENERAL': '🌐', 'IA': '🤖'
+} %}
+{% set region_flags = {'FR': '🇫🇷', 'PT': '🇵🇹', 'GLOBAL': '🌍'} %}
+
+<div class="article-wrap">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-row">
+    <a href="{{ url_for('feed') }}"><i class="bi bi-house-fill"></i> Flux</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="nn-badge" style="background:{{ cat_colors.get(article.category,'#B0BEC5') }}22;color:{{ cat_colors.get(article.category,'#B0BEC5') }};">
+      {{ cat_icons.get(article.category,'📰') }} {{ article.category }}
+    </span>
+    <span class="breadcrumb-sep">›</span>
+    <span style="color:var(--nn-muted);font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;">
+      {{ article.raw_title[:50] }}...
+    </span>
+  </div>
+
+  <!-- HERO IMAGE -->
+  <div class="article-hero-img">
+    {% if article.illustration_url and article.illustration_url.startswith('http') %}
+      <img src="{{ article.illustration_url }}" alt="{{ article.raw_title }}" loading="lazy"
+           onerror="this.style.display='none';this.parentElement.style.fontSize='5rem';" />
+    {% endif %}
+    <span style="position:relative;z-index:1;{% if article.illustration_url and article.illustration_url.startswith('http') %}display:none;{% endif %}">
+      {{ cat_icons.get(article.category, '📰') }}
+    </span>
+  </div>
+
+  <!-- TITLE -->
+  <h1 class="article-title">{{ article.raw_title }}</h1>
+
+  <!-- META BAR -->
+  <div class="article-meta-bar">
+    <div class="meta-item">
+      <span class="nn-badge" style="background:{{ cat_colors.get(article.category,'#B0BEC5') }}22;color:{{ cat_colors.get(article.category,'#B0BEC5') }};">
+        {{ cat_icons.get(article.category,'📰') }} {{ article.category }}
+      </span>
+    </div>
+
+    <div class="meta-item">
+      <span>{{ region_flags.get(article.source_region,'🌍') }}</span>
+      <span>{{ article.source_region }}</span>
+    </div>
+
+    {% if article.published_at %}
+    <div class="meta-item">
+      <i class="bi bi-clock"></i>
+      <span class="time-ago" data-ts="{{ article.published_at.isoformat() }}">
+        {{ article.published_at.strftime('%d %b %Y, %H:%M') }}
+      </span>
+    </div>
+    {% endif %}
+
+    {% if article.trust_score is not none %}
+    <div class="trust-bar-wrap">
+      <i class="bi bi-shield-check" style="color:{% if article.trust_score > 0.8 %}#4caf50{% elif article.trust_score > 0.5 %}#ffc107{% else %}#f44336{% endif %};"></i>
+      <div class="trust-bar">
+        <div class="trust-bar-fill" style="width:{{ (article.trust_score * 100)|int }}%;background:{% if article.trust_score > 0.8 %}#4caf50{% elif article.trust_score > 0.5 %}#ffc107{% else %}#f44336{% endif %};"></div>
+      </div>
+      <span>{{ '%.0f'|format(article.trust_score * 100) }}%</span>
+    </div>
+    {% endif %}
+
+    {% if article.source_url %}
+    <div class="meta-item ms-auto">
+      <a href="{{ article.source_url }}" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-box-arrow-up-right"></i> Source originale
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- AI SUMMARY -->
+  <div class="ai-summary-section">
+    <div class="ai-summary-header">
+      <span style="font-size:1.3rem;">🧠</span>
+      <span class="label">Résumé IA</span>
+      <span class="ai-badge">3 points clés</span>
+    </div>
+    <ul class="ai-points">
+      {% if article.ai_summary and article.ai_summary|length > 0 %}
+        {% for point in article.ai_summary %}
+        <li>
+          <span class="point-num">{{ loop.index }}</span>
+          <span>{{ point }}</span>
+        </li>
+        {% endfor %}
+      {% else %}
+        <li>
+          <span class="point-num">—</span>
+          <span style="color:var(--nn-muted);font-style:italic;">Résumé en cours de génération...</span>
+        </li>
+      {% endif %}
+    </ul>
+  </div>
+
+  <!-- FULL TEXT -->
+  {% if article.full_text %}
+  <div class="article-body">
+    {% for paragraph in article.full_text.split('\n') %}
+      {% if paragraph.strip() %}
+      <p>{{ paragraph.strip() }}</p>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="background:var(--nn-card);border:1px solid var(--nn-border);border-radius:12px;padding:2rem;text-align:center;margin-bottom:2rem;">
+    <p style="color:var(--nn-muted);font-size:0.9rem;">Le contenu complet de cet article n'est pas disponible localement.</p>
+    {% if article.source_url %}
+    <a href="{{ article.source_url }}" target="_blank" rel="noopener noreferrer"
+       style="color:var(--nn-red-l);text-decoration:none;font-weight:600;font-size:0.9rem;">
+      <i class="bi bi-box-arrow-up-right"></i> Lire l'article complet sur la source
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- LINKED APPS -->
+  {% if article.linked_apps and article.linked_apps|length > 0 %}
+  <div style="background:var(--nn-card);border:1px solid var(--nn-border);border-radius:12px;padding:1rem 1.2rem;margin-bottom:2rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+    <span style="font-size:0.8rem;color:var(--nn-muted);font-weight:600;">Lié à :</span>
+    {% for app in article.linked_apps %}
+    <span style="background:rgba(77,182,172,0.12);color:#4DB6AC;border-radius:6px;padding:0.2rem 0.6rem;font-size:0.78rem;font-weight:600;">
+      {{ app }}
+    </span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ACTIONS -->
+  <div class="article-actions">
+    <a href="{{ url_for('feed') }}" class="btn-action">
+      <i class="bi bi-arrow-left"></i> Retour au flux
+    </a>
+
+    <button class="btn-action {{ 'bookmarked' if article.id in bookmarks else '' }}"
+      id="bookmarkBtn"
+      onclick="toggleBookmark('{{ article.id }}')">
+      <i class="bi bi-bookmark{{ '-fill' if article.id in bookmarks else '' }}" id="bookmarkIcon"></i>
+      <span id="bookmarkText">{{ 'Sauvegardé' if article.id in bookmarks else 'Sauvegarder' }}</span>
+    </button>
+
+    {% if article.source_url %}
+    <a href="{{ article.source_url }}" target="_blank" rel="noopener noreferrer" class="source-link">
+      <i class="bi bi-box-arrow-up-right"></i>
+      Lire la source
+    </a>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Time ago
+  document.querySelectorAll('.time-ago').forEach(el => {
+    const ts = el.dataset.ts;
+    if (!ts) return;
+    const d = new Date(ts.endsWith('Z') ? ts : ts + 'Z');
+    const now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60) el.textContent = 'À l\'instant';
+    else if (diff < 3600) el.textContent = 'il y a ' + Math.floor(diff/60) + 'min';
+    else if (diff < 86400) el.textContent = 'il y a ' + Math.floor(diff/3600) + 'h';
+    else if (diff < 172800) el.textContent = 'Hier';
+    else el.textContent = d.toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'});
+  });
+
+  async function toggleBookmark(id) {
+    const btn = document.getElementById('bookmarkBtn');
+    const icon = document.getElementById('bookmarkIcon');
+    const text = document.getElementById('bookmarkText');
+    try {
+      const res = await fetch('/api/bookmark/' + id, { method: 'POST' });
+      const data = await res.json();
+      if (data.bookmarked) {
+        icon.className = 'bi bi-bookmark-fill';
+        text.textContent = 'Sauvegardé';
+        btn.classList.add('bookmarked');
+      } else {
+        icon.className = 'bi bi-bookmark';
+        text.textContent = 'Sauvegarder';
+        btn.classList.remove('bookmarked');
+      }
+    } catch(e) { console.error(e); }
+  }
+</script>
+{% endblock %}
