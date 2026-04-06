@@ -30,6 +30,7 @@ app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "nova-dev-secret-c
 db.init_app(app)
 
 INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY", "nova-internal-key-change-in-prod")
+NOVA_NEWS_MASTER_KEY = os.environ.get("NOVA_NEWS_MASTER_KEY", "")
 
 
 # ─── DB Init ──────────────────────────────────────────────────────────────────
@@ -342,6 +343,36 @@ def settings():
 
 
 # ─── API Routes (internal) ────────────────────────────────────────────────────
+
+@app.route("/api/admin/provision-user", methods=["POST"])
+def admin_provision_user():
+    """Crée ou remet à zéro le mot de passe d'un compte NovaNews (appelé depuis NovaAdmin)."""
+    key = request.headers.get("X-Master-Key", "")
+    if not NOVA_NEWS_MASTER_KEY or key != NOVA_NEWS_MASTER_KEY:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json(silent=True) or {}
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+    email = data.get("email", "") or f"{username}@novavivo.com"
+
+    if not username or not password:
+        return jsonify({"error": "username and password required"}), 400
+
+    existing = User.query.filter_by(username=username).first()
+    if existing:
+        existing.set_password(password)
+        if not existing.email:
+            existing.email = email
+        db.session.commit()
+        return jsonify({"ok": True, "updated": True}), 200
+
+    user = User(username=username, email=email)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({"ok": True}), 201
+
 
 @app.route("/api/news", methods=["GET"])
 def get_news():
