@@ -1,7 +1,7 @@
 import os
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from threading import Thread
 
@@ -77,7 +77,15 @@ def index():
         if user.onboarded:
             return redirect(url_for("feed"))
         return redirect(url_for("onboarding"))
-    return render_template("index.html")
+    # Dernières news des 2h pour le slideshow public
+    two_hours_ago = datetime.utcnow() - timedelta(hours=2)
+    recent = (NewsItem.query
+              .filter(NewsItem.published_at >= two_hours_ago)
+              .order_by(NewsItem.published_at.desc())
+              .limit(12).all())
+    if not recent:
+        recent = NewsItem.query.order_by(NewsItem.published_at.desc()).limit(10).all()
+    return render_template("index.html", recent_news=recent)
 
 
 @app.route("/register", methods=["GET", "POST"])
